@@ -158,6 +158,8 @@ class OrderRequest(BaseModel):
     deviation: int | None = None
     magic: int | None = None
     comment: str | None = None
+    position: int | None = None
+    position_by: int | None = None
     type_time: int | None = None
     type_filling: int | None = None
 
@@ -540,7 +542,9 @@ def get_symbols_by_group(group: str) -> list[str]:
     """
     symbols = mt5.symbols_get(group=group)
     if symbols is None:
-        logger.error(f"Failed to get symbols for group {group}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to get symbols for group {group}, error code: {mt5.last_error()}"
+        )
         return []
 
     return [symbol.name for symbol in symbols]
@@ -560,7 +564,9 @@ def get_symbol_info(symbol: str) -> SymbolInfo:
     """
     symbol_info = mt5.symbol_info(symbol)
     if symbol_info is None:
-        logger.error(f"Failed to get info for symbol {symbol}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to get info for symbol {symbol}, error code: {mt5.last_error()}"
+        )
         raise ValueError(f"Failed to get info for symbol {symbol}")
 
     # Convert named tuple to dictionary
@@ -590,7 +596,9 @@ def get_symbol_info_tick(symbol: str) -> dict[str, Any]:
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
         error_code, error_msg = mt5.last_error()
-        logger.error(f"Failed to get tick for symbol {symbol}, error: {error_code} - {error_msg}")
+        logger.error(
+            f"Failed to get tick for symbol {symbol}, error: {error_code} - {error_msg}"
+        )
         raise ValueError(
             f"Failed to get tick for symbol {symbol}. "
             f"Error: {error_code} - {error_msg}. "
@@ -628,7 +636,9 @@ def symbol_select(symbol: str, visible: bool = True) -> bool:
     """
     result = mt5.symbol_select(symbol, visible)
     if not result:
-        logger.error(f"Failed to select symbol {symbol}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to select symbol {symbol}, error code: {mt5.last_error()}"
+        )
 
     return result
 
@@ -663,9 +673,13 @@ def copy_rates_from_pos(
     Returns:
         List[Dict[str, Any]]: List of bars with time, open, high, low, close, tick_volume, spread, and real_volume.
     """
-    rates = mt5.copy_rates_from_pos(symbol, get_timeframe_constant(timeframe), start_pos, count)
+    rates = mt5.copy_rates_from_pos(
+        symbol, get_timeframe_constant(timeframe), start_pos, count
+    )
     if rates is None:
-        logger.error(f"Failed to copy rates for {symbol}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to copy rates for {symbol}, error code: {mt5.last_error()}"
+        )
         raise ValueError(f"Failed to copy rates for {symbol}")
 
     # Convert numpy array to list of dictionaries
@@ -693,7 +707,9 @@ def copy_rates_from_date(
     Returns:
         List[Dict[str, Any]]: List of bars with time, open, high, low, close, tick_volume, spread, and real_volume.
     """
-    rates = mt5.copy_rates_from_date(symbol, get_timeframe_constant(timeframe), date_from, count)
+    rates = mt5.copy_rates_from_date(
+        symbol, get_timeframe_constant(timeframe), date_from, count
+    )
     if rates is None:
         logger.error(
             f"Failed to copy rates for {symbol} from date {date_from}, error code: {mt5.last_error()}"
@@ -725,12 +741,16 @@ def copy_rates_range(
     Returns:
         List[Dict[str, Any]]: List of bars with time, open, high, low, close, tick_volume, spread, and real_volume.
     """
-    rates = mt5.copy_rates_range(symbol, get_timeframe_constant(timeframe), date_from, date_to)
+    rates = mt5.copy_rates_range(
+        symbol, get_timeframe_constant(timeframe), date_from, date_to
+    )
     if rates is None:
         logger.error(
             f"Failed to copy rates for {symbol} in range {date_from} to {date_to}, error code: {mt5.last_error()}"
         )
-        raise ValueError(f"Failed to copy rates for {symbol} in range {date_from} to {date_to}")
+        raise ValueError(
+            f"Failed to copy rates for {symbol} in range {date_from} to {date_to}"
+        )
 
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(rates)
@@ -762,7 +782,9 @@ def copy_ticks_from_pos(
     """
     ticks = mt5.copy_ticks_from(symbol, start_time, count, flags)
     if ticks is None:
-        logger.error(f"Failed to copy ticks for {symbol}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to copy ticks for {symbol}, error code: {mt5.last_error()}"
+        )
         raise ValueError(f"Failed to copy ticks for {symbol}")
 
     # Convert numpy array to list of dictionaries
@@ -827,7 +849,9 @@ def copy_ticks_range(
         logger.error(
             f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}, error code: {mt5.last_error()}"
         )
-        raise ValueError(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}")
+        raise ValueError(
+            f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}"
+        )
 
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
@@ -861,7 +885,9 @@ def get_last_error() -> dict[str, Any]:
         mt5.RES_E_INTERNAL_FAIL: "Internal failure",
     }
 
-    error_description = error_descriptions.get(error_code, error_message or "Unknown error")
+    error_description = error_descriptions.get(
+        error_code, error_message or "Unknown error"
+    )
 
     return {"code": error_code, "description": error_description}
 
@@ -1161,7 +1187,9 @@ def order_check(request: OrderRequest) -> dict[str, Any]:
 
 # Get positions
 @mcp.tool()
-def positions_get(symbol: str | None = None, group: str | None = None) -> list[Position]:
+def positions_get(
+    symbol: str | None = None, group: str | None = None
+) -> list[Position]:
     """
     Get open positions.
 
@@ -1206,7 +1234,9 @@ def positions_get_by_ticket(ticket: int) -> Position | None:
     """
     position = mt5.positions_get(ticket=ticket)
     if position is None or len(position) == 0:
-        logger.error(f"Failed to get position with ticket {ticket}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to get position with ticket {ticket}, error code: {mt5.last_error()}"
+        )
         return None
 
     # Convert named tuple to dictionary
@@ -1216,7 +1246,9 @@ def positions_get_by_ticket(ticket: int) -> Position | None:
 
 # Get orders
 @mcp.tool()
-def orders_get(symbol: str | None = None, group: str | None = None) -> list[dict[str, Any]]:
+def orders_get(
+    symbol: str | None = None, group: str | None = None
+) -> list[dict[str, Any]]:
     """
     Get active orders.
 
@@ -1261,7 +1293,9 @@ def orders_get_by_ticket(ticket: int) -> dict[str, Any] | None:
     """
     order = mt5.orders_get(ticket=ticket)
     if order is None or len(order) == 0:
-        logger.error(f"Failed to get order with ticket {ticket}, error code: {mt5.last_error()}")
+        logger.error(
+            f"Failed to get order with ticket {ticket}, error code: {mt5.last_error()}"
+        )
         return None
 
     # Convert named tuple to dictionary
@@ -1478,3 +1512,48 @@ def get_trade_actions() -> str:
         result += f"{name}: {value}\n"
 
     return result
+
+
+# Modify position (SL/TP)
+@mcp.tool()
+def position_modify(ticket: int, sl: float, tp: float) -> dict[str, Any]:
+    """
+    Modify Stop Loss and Take Profit for an existing position.
+
+    Args:
+        ticket: Position ticket
+        sl: New Stop Loss price
+        tp: New Take Profit price
+
+    Returns:
+        Dict[str, Any]: Result of the modification request.
+    """
+    # Create request
+    request = {
+        "action": mt5.TRADE_ACTION_SLTP,
+        "position": ticket,
+        "sl": sl,
+        "tp": tp,
+    }
+
+    # Send order
+    result = mt5.order_send(request)
+    if result is None:
+        error_code, error_msg = mt5.last_error()
+        logger.error(
+            f"Failed to modify position {ticket}, error: {error_code} - {error_msg}"
+        )
+        raise ValueError(
+            f"Failed to modify position. Error: {error_code} - {error_msg}"
+        )
+
+    # Convert named tuple to dictionary
+    result_dict = result._asdict()
+
+    # Check success
+    if result_dict.get("retcode") != mt5.TRADE_RETCODE_DONE:
+        logger.warning(
+            f"Position modification result: {result_dict.get('comment')} ({result_dict.get('retcode')})"
+        )
+
+    return result_dict
