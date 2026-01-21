@@ -1516,7 +1516,9 @@ def get_trade_actions() -> str:
 
 # Modify position (SL/TP)
 @mcp.tool()
-def position_modify(ticket: int, sl: float, tp: float) -> dict[str, Any]:
+def position_modify(
+    ticket: int, sl: float, tp: float, magic: int | None = None
+) -> dict[str, Any]:
     """
     Modify Stop Loss and Take Profit for an existing position.
 
@@ -1524,6 +1526,7 @@ def position_modify(ticket: int, sl: float, tp: float) -> dict[str, Any]:
         ticket: Position ticket
         sl: New Stop Loss price
         tp: New Take Profit price
+        magic: Expert Advisor ID (optional, to keep order history consistent)
 
     Returns:
         Dict[str, Any]: Result of the modification request.
@@ -1535,6 +1538,10 @@ def position_modify(ticket: int, sl: float, tp: float) -> dict[str, Any]:
         "sl": sl,
         "tp": tp,
     }
+
+    # Add magic if provided
+    if magic is not None:
+        request["magic"] = magic
 
     # Send order
     result = mt5.order_send(request)
