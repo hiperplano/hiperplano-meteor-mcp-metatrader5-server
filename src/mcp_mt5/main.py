@@ -1044,6 +1044,7 @@ def order_send(request: OrderRequest) -> OrderResult:
     request_dict = request.model_dump(exclude_none=True)
 
     # Send order
+    logger.info(f"📤 Sending Order to MT5: {request_dict}")
     result = mt5.order_send(request_dict)
     if result is None:
         error_code, error_msg = mt5.last_error()
@@ -1544,6 +1545,7 @@ def position_modify(
         request["magic"] = magic
 
     # Send order
+    logger.info(f"📤 Sending Position Modify to MT5: {request}")
     result = mt5.order_send(request)
     if result is None:
         error_code, error_msg = mt5.last_error()
