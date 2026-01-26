@@ -1310,8 +1310,8 @@ def history_orders_get(
     group: str | None = None,
     ticket: int | None = None,
     position: int | None = None,
-    from_date: datetime | None = None,
-    to_date: datetime | None = None,
+    from_date: float | datetime | None = None,
+    to_date: float | datetime | None = None,
 ) -> list[HistoryOrder]:
     """
     Get orders from history within the specified date range.
@@ -1321,8 +1321,8 @@ def history_orders_get(
         group: Filter for arranging a group of orders
         ticket: Order ticket
         position: Position ticket
-        from_date: Start date for order retrieval
-        to_date: End date for order retrieval
+        from_date: Start date for order retrieval (datetime or float timestamp)
+        to_date: End date for order retrieval (datetime or float timestamp)
 
     Returns:
         List[HistoryOrder]: List of historical orders.
@@ -1336,13 +1336,29 @@ def history_orders_get(
         request["ticket"] = ticket
     if position is not None:
         request["position"] = position
-    if from_date is not None:
-        request["from"] = from_date
-    if to_date is not None:
-        request["to"] = to_date
 
     # Get history orders
-    if request:
+    # CRITICAL: MT5 rejects kwargs {'from': float, 'to': float} with error (-2, 'Invalid arguments')
+    # We must use positional arguments when from_date/to_date are provided
+    if from_date is not None and to_date is not None:
+        # Use positional args for date range
+        if request:
+            # If we have filters (symbol/group/ticket/position), we can't use positional args
+            # Fall back to datetime conversion
+            logger.warning(
+                f"history_orders_get: Converting float timestamps to datetime for filtered query"
+            )
+            if isinstance(from_date, (int, float)):
+                from_date = datetime.fromtimestamp(from_date)
+            if isinstance(to_date, (int, float)):
+                to_date = datetime.fromtimestamp(to_date)
+            request["from"] = from_date
+            request["to"] = to_date
+            orders = mt5.history_orders_get(**request)
+        else:
+            # No filters, use positional args (works with float timestamps)
+            orders = mt5.history_orders_get(from_date, to_date)
+    elif request:
         orders = mt5.history_orders_get(**request)
     else:
         orders = mt5.history_orders_get()
@@ -1367,8 +1383,8 @@ def history_deals_get(
     group: str | None = None,
     ticket: int | None = None,
     position: int | None = None,
-    from_date: datetime | None = None,
-    to_date: datetime | None = None,
+    from_date: float | datetime | None = None,
+    to_date: float | datetime | None = None,
 ) -> list[Deal]:
     """
     Get deals from history within the specified date range.
@@ -1378,8 +1394,8 @@ def history_deals_get(
         group: Filter for arranging a group of deals
         ticket: Deal ticket
         position: Position ticket
-        from_date: Start date for deal retrieval
-        to_date: End date for deal retrieval
+        from_date: Start date for deal retrieval (datetime or float timestamp)
+        to_date: End date for deal retrieval (datetime or float timestamp)
 
     Returns:
         List[Deal]: List of historical deals.
@@ -1393,13 +1409,29 @@ def history_deals_get(
         request["ticket"] = ticket
     if position is not None:
         request["position"] = position
-    if from_date is not None:
-        request["from"] = from_date
-    if to_date is not None:
-        request["to"] = to_date
 
     # Get history deals
-    if request:
+    # CRITICAL: MT5 rejects kwargs {'from': float, 'to': float} with error (-2, 'Invalid arguments')
+    # We must use positional arguments when from_date/to_date are provided
+    if from_date is not None and to_date is not None:
+        # Use positional args for date range
+        if request:
+            # If we have filters (symbol/group/ticket/position), we can't use positional args
+            # Fall back to datetime conversion
+            logger.warning(
+                f"history_deals_get: Converting float timestamps to datetime for filtered query"
+            )
+            if isinstance(from_date, (int, float)):
+                from_date = datetime.fromtimestamp(from_date)
+            if isinstance(to_date, (int, float)):
+                to_date = datetime.fromtimestamp(to_date)
+            request["from"] = from_date
+            request["to"] = to_date
+            deals = mt5.history_deals_get(**request)
+        else:
+            # No filters, use positional args (works with float timestamps)
+            deals = mt5.history_deals_get(from_date, to_date)
+    elif request:
         deals = mt5.history_deals_get(**request)
     else:
         deals = mt5.history_deals_get()
